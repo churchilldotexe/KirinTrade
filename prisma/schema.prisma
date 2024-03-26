@@ -10,11 +10,54 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+// model Post {
+//     id        Int      @id @default(autoincrement())
+//     name      String
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
 
-    @@index([name])
+//     @@index([name])
+// }
+
+
+model Product {
+    id String @id @default(uuid())
+    name                    String
+    priceInCents            Int
+    filePatch               String
+    imagePath               String
+    description             String
+    isAvailableforPurchase  Boolean         @default(true)
+    createdAt               DateTime        @default(now())
+    updatedAt               DateTime        @updatedAt
+    orders Order[]
+    downloadVerifications DownloadVerification[]
+}
+
+model User {
+    id String @id @default(uuid())
+    email       String      @unique
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    orders Order[]
+}
+
+model Order {
+    id String @id @default(uuid())
+    pricePaidinCents    Int
+    createdAt           DateTime    @default(now())
+    updatedAt           DateTime    @updatedAt
+
+    userId      String
+    productId   String
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model DownloadVerification{
+    id String @id @default(uuid())
+    expresAt    DateTime
+    createdAt   DateTime @default(now())
+    productId String
+    product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
