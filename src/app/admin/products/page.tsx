@@ -2,9 +2,8 @@ import PageHeader from "@/components/admin-dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import db from "@/db/db";
-import { Plus, PlusSquare } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
-import React from "react";
 
 const AdminProductPage = async () => {
   const productsData = await db.product.findMany({
