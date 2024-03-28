@@ -11,7 +11,7 @@ export default function AminLayout({
   return (
     <>
       <Navigation>
-        <NavLink href="/admin/">Dashboard</NavLink>
+        <NavLink href="/admin">Dashboard</NavLink>
         <NavLink href="/admin/products">Products</NavLink>
         <NavLink href="/admin/users">Customers</NavLink>
         <NavLink href="/admin/orders">Sales</NavLink>
