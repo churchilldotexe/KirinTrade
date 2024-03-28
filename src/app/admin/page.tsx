@@ -46,7 +46,7 @@ const getProductData = async () => {
   };
 };
 
-const AdminDashBoard = async () => {
+export default async function AdminDashBoard() {
   const [salesData, UserData, productData] = await Promise.all([
     getSaleData(),
     getUserData(),
@@ -68,11 +68,11 @@ const AdminDashBoard = async () => {
       <DashBoardCard
         title="Active Products"
         subtitle={`${formatNumber(productData.inactiveCount)} inactive products`}
-        body={formatNumber(productData.activeCount)}
+        body={`${formatNumber(productData.activeCount)} active products`}
       />
     </div>
   );
-};
+}
 
 interface DashBoardCardProps {
   title: string;
@@ -93,5 +93,3 @@ const DashBoardCard = ({ title, subtitle, body }: DashBoardCardProps) => {
     </Card>
   );
 };
-
-export default AdminDashBoard;
