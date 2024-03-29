@@ -117,14 +117,12 @@ const ProductsTable = async () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem asChild>
-                    <a download href={`admin/products/${product.id}/download`}>
+                    <a download href={`./products/${product.id}/download`}>
                       Download
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={`/admin/products/${product.id}/edit`}>
-                      Edit
-                    </Link>
+                    <Link href={`./products/${product.id}/edit`}>Edit</Link>
                   </DropdownMenuItem>
                   <ActiveToggleDropdownItem
                     id={product.id}

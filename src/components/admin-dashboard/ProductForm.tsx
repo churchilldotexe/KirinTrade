@@ -1,20 +1,43 @@
 "use client";
 
-import addProduct from "@/app/admin/_actions/product";
+import { addProduct, updateProduct } from "@/app/admin/_actions/product";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
+import type { Product } from "@prisma/client";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
-const ProductForm = () => {
-  const [error, action] = useFormState(addProduct, {});
-  const [priceInCents, setPriceinCents] = useState<number>();
+const ProductForm = ({ product }: { product?: Product | null }) => {
+  const [error, action] = useFormState(
+    product === null || product === undefined
+      ? addProduct
+      : updateProduct.bind(null, product.id),
+    {},
+  );
+  const [priceInCents, setPriceinCents] = useState<number | undefined>(
+    product?.priceInCents,
+  );
+
+  const RenderImage = () => {
+    if (product !== null || product !== undefined) {
+      return (
+        <Image
+          src={product!.imagePath}
+          alt={`${product!.name} image`}
+          width={600}
+          height={600}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      );
+    }
+  };
 
   return (
     <form action={action} className="space-y-8">
@@ -26,6 +49,7 @@ const ProductForm = () => {
           name="name"
           required
           className={cn({ "outline outline-red-400": error.name })}
+          defaultValue={product?.name}
         />
         {error.name && toast.error(error.name)}
       </div>
@@ -58,6 +82,7 @@ const ProductForm = () => {
           name="description"
           required
           className={cn({ "outline outline-red-400": error.description })}
+          defaultValue={product?.description}
         />
         {error.description && toast.error(error.description)}
       </div>
@@ -68,9 +93,10 @@ const ProductForm = () => {
           type="file"
           id="file"
           name="file"
-          required
+          required={product === null}
           className={cn({ "outline outline-red-400": error.file })}
         />
+        {product !== null && <div>{product?.filePath}</div>}
         {error.file && toast.error(error.file)}
       </div>
 
@@ -81,9 +107,10 @@ const ProductForm = () => {
           id="image"
           name="image"
           accept="image/*"
-          required
+          required={product === null}
           className={cn({ "outline outline-red-400": error.image })}
         />
+        {<RenderImage />}
         {error.image && toast.error(error.image)}
       </div>
       <SubmitButton />
