@@ -25,6 +25,6 @@ export default function AdminLoading() {
           </CardContent>
         </Card>
       ))}
-    </div>
+    </div> 
   );
 }

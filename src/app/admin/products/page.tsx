@@ -40,7 +40,7 @@ export default function AdminProductPage() {
 }
 
 // render when no products
-const AddProducts = ({ href }: { href: string }) => {
+const RenderWhenNoProducts = ({ href }: { href: string }) => {
   return (
     <div className="relative h-[80dvh]">
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 lg:gap-10">
@@ -73,7 +73,7 @@ const ProductsTable = async () => {
   });
 
   if (productsData.length === 0)
-    return <AddProducts href="/admin/products/new" />;
+    return <RenderWhenNoProducts href="/admin/products/new" />;
 
   return (
     <Table>
