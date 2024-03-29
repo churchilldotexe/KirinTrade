@@ -22,16 +22,12 @@ async function isAuthenticated(req: NextRequest) {
     .toString()
     .split(":");
 
-  console.log(username, password);
-
   if (
     process.env.ADMIN_USER === undefined &&
     process.env.HASED_ADMIN_PASSWORD === undefined
   ) {
     console.error("password and username must be registered");
   }
-  console.log(process.env.ADMIN_USER);
-  console.log(process.env.HASHED_ADMIN_PASSWORD);
   return (
     username === process.env.ADMIN_USER &&
     (await isValidPassword(password!, process.env.HASHED_ADMIN_PASSWORD!))

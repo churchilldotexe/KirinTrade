@@ -25,20 +25,6 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
     product?.priceInCents,
   );
 
-  const RenderImage = () => {
-    if (product !== null || product !== undefined) {
-      return (
-        <Image
-          src={product!.imagePath}
-          alt={`${product!.name} image`}
-          width={600}
-          height={600}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-      );
-    }
-  };
-
   return (
     <form action={action} className="space-y-8">
       <div className="space-y-2">
@@ -110,7 +96,15 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
           required={product === null}
           className={cn({ "outline outline-red-400": error.image })}
         />
-        {<RenderImage />}
+        {!!product && (
+          <Image
+            src={product.imagePath}
+            alt={`${product.name} image`}
+            width={600}
+            height={600}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        )}
         {error.image && toast.error(error.image)}
       </div>
       <SubmitButton />
