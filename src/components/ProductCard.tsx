@@ -9,12 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatter";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type ProductCardProps = {
   id: string;
@@ -72,5 +71,3 @@ export default function ProductCard({
     </Card>
   );
 }
-
-
