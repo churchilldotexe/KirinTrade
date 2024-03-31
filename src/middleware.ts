@@ -18,6 +18,8 @@ async function isAuthenticated(req: NextRequest) {
     req.headers.get("Authorization") ?? req.headers.get("authorization");
 
   if (authHeader === null) return false;
+  console.log(authHeader);
+
   const [username, password] = Buffer.from(authHeader.split(" ")[1]!, "base64")
     .toString()
     .split(":");
