@@ -25,6 +25,8 @@ import { CheckCircle2, MoreVertical, Plus, XCircle } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
+// TODO: loading state: this route,new,[id]edit
+
 export default function AdminProductPage() {
   return (
     <>
@@ -39,7 +41,7 @@ export default function AdminProductPage() {
   );
 }
 
-// render when no products
+// render when no products found
 const RenderWhenNoProducts = ({ href }: { href: string }) => {
   return (
     <div className="relative h-[80dvh]">

@@ -6,9 +6,10 @@ import { cache } from "@/lib/cache";
 import { Suspense } from "react";
 
 const getProducts = cache(
-  (orderBy: object) => {
+  (orderBy) => {
     return db.product.findMany({
       where: { isAvailableforPurchase: true },
+      // @ts-expect-error argument use for sorting the product
       orderBy,
     });
   },
