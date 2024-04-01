@@ -1,3 +1,5 @@
+import AdminLoading from "@/app/admin/loading";
+import Loading from "@/app/admin/products/loading";
 import PageHeader from "@/components/admin-dashboard/PageHeader";
 import {
   ActiveToggleDropdownItem,
@@ -23,9 +25,7 @@ import db from "@/db/db";
 import { formatCurrency } from "@/lib/formatter";
 import { CheckCircle2, MoreVertical, Plus, XCircle } from "lucide-react";
 import Link from "next/link";
-import React from "react";
-
-// TODO: loading state: this route,new,[id]edit
+import React, { Suspense } from "react";
 
 export default function AdminProductPage() {
   return (
@@ -36,7 +36,9 @@ export default function AdminProductPage() {
           <Link href={"/admin/products/new"}>Add Product</Link>
         </Button>
       </div>
-      <ProductsTable />
+      <Suspense fallback={<Loading />}>
+        <ProductsTable />
+      </Suspense>
     </>
   );
 }

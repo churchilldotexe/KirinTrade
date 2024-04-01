@@ -10,12 +10,12 @@ import { formatCurrency, formatNumber } from "@/lib/formatter";
 
 const getSaleData = async () => {
   const data = await db.order.aggregate({
-    _sum: { pricePaidinCents: true },
+    _sum: { pricePaidInCents: true },
     _count: true,
   });
 
   return {
-    amount: (data._sum?.pricePaidinCents ?? 0) / 100,
+    amount: (data._sum?.pricePaidInCents ?? 0) / 100,
     numberOfSales: data._count,
   };
 };
@@ -24,14 +24,14 @@ const getUserData = async () => {
   const [userCount, orderData] = await Promise.all([
     db.user.count(),
     db.order.aggregate({
-      _sum: { pricePaidinCents: true },
+      _sum: { pricePaidInCents: true },
     }),
   ]);
 
   return {
     userCount,
     averageValuePerUser:
-      userCount ?? (orderData._sum.pricePaidinCents ?? 0) / userCount / 100,
+      userCount ?? (orderData._sum.pricePaidInCents ?? 0) / userCount / 100,
   };
 };
 

@@ -19,7 +19,7 @@ export default function SkeletonLoading() {
 
 function ProductCardSkeleton() {
   return (
-    <Card className="flex animate-pulse flex-col overflow-hidden ">
+    <Card className="flex animate-pulse flex-col overflow-hidden transition-all duration-300 ">
       <Skeleton className="relative aspect-video h-auto w-full bg-gray-300" />
       <CardHeader>
         <CardTitle>

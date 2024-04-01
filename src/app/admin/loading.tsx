@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminLoading() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 transition-all duration-300 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }, (_, index) => (
         <Card key={index}>
           <CardHeader>
@@ -25,6 +25,6 @@ export default function AdminLoading() {
           </CardContent>
         </Card>
       ))}
-    </div> 
+    </div>
   );
 }

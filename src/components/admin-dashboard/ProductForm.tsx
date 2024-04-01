@@ -14,7 +14,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
-const ProductForm = ({ product }: { product?: Product | null }) => {
+export default function ProductForm({ product }: { product?: Product | null }) {
   const [error, action] = useFormState(
     product === null || product === undefined
       ? addProduct
@@ -110,7 +110,7 @@ const ProductForm = ({ product }: { product?: Product | null }) => {
       <SubmitButton />
     </form>
   );
-};
+}
 
 const SubmitButton = () => {
   const { pending } = useFormStatus();
@@ -127,5 +127,3 @@ const SubmitButton = () => {
     </Button>
   );
 };
-
-export default ProductForm;
