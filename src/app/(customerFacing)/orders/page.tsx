@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { useFormState, useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
+// TODO fix database Check docs for sqlite.. try to connect to turso/ supabase if cant
+
 export default function OrdersPage() {
   const [data, action] = useFormState(emailOrderHistory, {});
 
