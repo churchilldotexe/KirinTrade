@@ -1,4 +1,3 @@
-import AdminLoading from "@/app/admin/loading";
 import Loading from "@/app/admin/products/loading";
 import PageHeader from "@/components/admin-dashboard/PageHeader";
 import {
@@ -25,7 +24,7 @@ import db from "@/db/db";
 import { formatCurrency } from "@/lib/formatter";
 import { CheckCircle2, MoreVertical, Plus, XCircle } from "lucide-react";
 import Link from "next/link";
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 
 export default function AdminProductPage() {
   return (
