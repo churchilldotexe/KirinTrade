@@ -9,7 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Navigation>
         <NavLink href="/">Dashboard</NavLink>
         <NavLink href="/products">Products</NavLink>
-        <NavLink href="/ kkorders">Sales</NavLink>
+        <NavLink href="/orders">My Orders</NavLink>
       </Navigation>
       <div className="container my-6">{children}</div>
     </>

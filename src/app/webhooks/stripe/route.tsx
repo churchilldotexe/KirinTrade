@@ -3,6 +3,7 @@ import { env } from "@/env";
 import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
+import PurchaseReceiptEmail from "@/email/PurchaseReceipt";
 
 const strip = new Stripe(env.STRIPE_WEBHOOK_SECRET);
 const resend = new Resend(env.RESEND_API_KEY);
@@ -18,7 +19,9 @@ export async function POST(req: NextRequest) {
     const productId = charge.metadata.productId;
     const email = charge.billing_details.email;
     const pricePaidInCents = charge.amount;
-    const product = db.product.findUnique({ where: { id: productId } });
+
+    const product = await db.product.findUnique({ where: { id: productId } });
+
     if (product === null || email === null || productId === undefined) {
       return new NextResponse("Bad Request", { status: 400 });
     }
@@ -48,7 +51,13 @@ export async function POST(req: NextRequest) {
       from: `Support <${env.SENDER_EMAIL}>`,
       to: email,
       subject: "Order Confirmation",
-      react: <h1>oh Hi!</h1>,
+      react: (
+        <PurchaseReceiptEmail
+          product={product}
+          order={order!}
+          downloadVerificationId={downloadVerification.id}
+        />
+      ),
     });
   }
   return new NextResponse();

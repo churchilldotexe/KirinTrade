@@ -1,5 +1,5 @@
 "use client";
-import { userOrderExists } from "@/app/actions/order";
+import { userOrderExists } from "@/app/actions/orders";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -97,25 +97,22 @@ function Form({
       return;
     }
     try {
-      await stripe
-        .confirmPayment({
-          elements,
-          confirmParams: {
-            return_url: `http://localhost:3000/stripe/purchase-success`,
-          },
-        })
-        .then(({ error }) => {
-          if (
-            error.type === "card_error" ||
-            error.type === "validation_error"
-          ) {
-            setErrorMessage(error.message);
-          } else {
-            setErrorMessage("An unknown error occured");
-          }
-        });
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `http://localhost:3000/stripe/purchase-success`,
+        },
+      });
+      if (
+        error &&
+        (error.type === "card_error" || error.type === "validation_error")
+      ) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("An unknown error occured");
+      }
     } catch (error) {
-      setErrorMessage("An Error Occured");
+      setErrorMessage("An Error Occured while processing the payment");
     } finally {
       setIsLoading(false);
     }
