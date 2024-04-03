@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 import "@/styles/globals.css";
 
-import { Inter } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+const DM = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--DM-sans",
 });
 
 export const metadata = {
@@ -25,7 +25,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          inter.variable,
+          DM.variable,
         )}
       >
         {children}
