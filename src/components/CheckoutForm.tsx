@@ -100,7 +100,7 @@ function Form({
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `http://localhost:3000/stripe/purchase-success`,
+          return_url: `${env.NEXT_PUBLIC_SERVER_URL}/stripe/purchase-success`,
         },
       });
       if (
