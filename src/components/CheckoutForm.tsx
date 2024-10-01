@@ -1,5 +1,4 @@
 "use client";
-import { userOrderExists } from "@/app/actions/orders";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -80,9 +79,11 @@ function Form({
   const elements = useElements();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>();
-  //const email = useRef<string>();
-
   let email = "";
+  const { refetch: checkOrderExists } = trpc.orders.getMyOrder.useQuery(
+    { email, productId },
+    { enabled: false },
+  );
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,7 +91,7 @@ function Form({
     if (stripe === null || elements === null || !email) return;
     setIsLoading(true);
 
-    const orderExists = await userOrderExists(email, productId);
+    const { data: orderExists } = await checkOrderExists();
     if (orderExists) {
       setErrorMessage(
         "You have already purchased this product. Try downloading it from the My Orders page",

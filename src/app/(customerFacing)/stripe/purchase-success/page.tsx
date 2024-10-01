@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import db from "@/db/db";
-import { env } from "@/env";
+import { env } from "@/env/server";
 import { formatCurrency } from "@/lib/formatter";
+import { serverClient } from "@/trpc/serverClient";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,13 +18,13 @@ export default async function SuccessPage({
     searchParams.payment_intent,
   );
 
-  if (paymentIntent.metadata.productId === null) return notFound();
+  if (!paymentIntent.metadata.productId) return notFound();
 
-  const product = await db.product.findUnique({
-    where: { id: paymentIntent.metadata.productId },
-  });
+  const product = await serverClient.products.getMyProduct(
+    paymentIntent.metadata.productId,
+  );
 
-  if (product === null) return notFound();
+  if (!product) return notFound();
 
   const isSuccess = paymentIntent.status === "succeeded";
 
@@ -79,12 +79,5 @@ export default async function SuccessPage({
 }
 
 async function createDownloadVerification(productId: string) {
-  return (
-    await db.downloadVerification.create({
-      data: {
-        productId,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-      },
-    })
-  ).id;
+  return await serverClient.downloads.createDownloadVerfication({ productId });
 }

@@ -2,7 +2,6 @@ import ProductCard from "@/components/ProductCard";
 import SkeletonLoading from "@/components/loading";
 import { Button } from "@/components/ui/button";
 import { type SORT_METHOD } from "@/lib/constants";
-import { type SelectProductsTypes } from "@/server/database/schema/products";
 import { serverClient } from "@/trpc/serverClient";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -27,9 +26,13 @@ export default async function functionHomePage() {
   );
 }
 
+type productFetcherReturnType = ReturnType<
+  (typeof serverClient)["products"]["getNewestProducts"]
+>;
+
 type ProductGridSectionProps = {
   title: string;
-  productFetcher: Promise<SelectProductsTypes[]>;
+  productFetcher: productFetcherReturnType;
   sortBy: keyof typeof SORT_METHOD;
 };
 
@@ -58,7 +61,7 @@ function ProductGridSection({
 async function RenderSuspendedProducts({
   productFetcher,
 }: {
-  productFetcher: Promise<SelectProductsTypes[]>;
+  productFetcher: productFetcherReturnType;
 }) {
   return (await productFetcher).map((product, index) => (
     <ProductCard key={product.id} {...product} index={index} />
