@@ -1,34 +1,16 @@
 import ProductCard from "@/components/ProductCard";
 import SkeletonLoading from "@/components/loading";
 import { Button } from "@/components/ui/button";
-import type { SORT_METHOD } from "@/config";
-import db from "@/db/db";
-import { cache } from "@/lib/cache";
-import type { Product } from "@prisma/client";
+import { type SORT_METHOD } from "@/lib/constants";
+import { type SelectProductsTypes } from "@/server/database/schema/products";
+import { serverClient } from "@/trpc/serverClient";
 import Link from "next/link";
 import { Suspense } from "react";
 
-const getMostPopularOrder = cache(
-  () => {
-    return db.product.findMany({
-      where: { isAvailableforPurchase: true },
-      orderBy: { orders: { _count: "desc" } },
-      take: 6,
-    });
-  },
-  ["/", "getMostPopularOrder"],
-  { revalidate: 60 * 60 * 24 },
-);
+export default async function functionHomePage() {
+  const getNewestOrder = serverClient.products.getNewestProducts();
+  const getMostPopularOrder = serverClient.products.getPopularProducts();
 
-const getNewestOrder = cache(() => {
-  return db.product.findMany({
-    where: { isAvailableforPurchase: true },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  });
-}, ["/", "getNewestOrder"]);
-
-export default function functionHomePage() {
   return (
     <main className="space-y-12">
       <ProductGridSection
@@ -47,7 +29,7 @@ export default function functionHomePage() {
 
 type ProductGridSectionProps = {
   title: string;
-  productFetcher: () => Promise<Product[]>;
+  productFetcher: Promise<SelectProductsTypes[]>;
   sortBy: keyof typeof SORT_METHOD;
 };
 
@@ -76,9 +58,9 @@ function ProductGridSection({
 async function RenderSuspendedProducts({
   productFetcher,
 }: {
-  productFetcher: () => Promise<Product[]>;
+  productFetcher: Promise<SelectProductsTypes[]>;
 }) {
-  return (await productFetcher()).map((product, index) => (
+  return (await productFetcher).map((product, index) => (
     <ProductCard key={product.id} {...product} index={index} />
   ));
 }

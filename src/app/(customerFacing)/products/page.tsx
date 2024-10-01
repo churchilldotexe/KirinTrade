@@ -1,20 +1,8 @@
 import ProductCard from "@/components/ProductCard";
 import SkeletonLoading from "@/components/loading";
-import { SORT_METHOD } from "@/config";
-import db from "@/db/db";
-import { cache } from "@/lib/cache";
+import { SORT_METHOD } from "@/lib/constants";
+import { serverClient } from "@/trpc/serverClient";
 import { Suspense } from "react";
-
-const getProducts = cache(
-  (orderBy) => {
-    return db.product.findMany({
-      where: { isAvailableforPurchase: true },
-      // @ts-expect-error argument use for sorting the product
-      orderBy,
-    });
-  },
-  ["/products", "getProducts"],
-);
 
 export default function ProductsPage({
   searchParams: { orderBy },
@@ -46,7 +34,9 @@ interface RenderSuspendedProductProps {
 async function RenderSuspendedProduct({
   orderBy,
 }: RenderSuspendedProductProps) {
-  const products = await getProducts(orderBy);
+  const products = await serverClient.products.getAllProducts({
+    sortby: orderBy,
+  });
   return products.map((product, index) => (
     <ProductCard key={product.id} {...product} index={index} />
   ));
