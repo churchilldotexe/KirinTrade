@@ -2,6 +2,8 @@ import db from "@/db/db";
 import fs from "fs/promises";
 import { NextResponse, type NextRequest } from "next/server";
 
+//FIX: change to trpc mutation
+
 export async function GET(
   req: NextRequest,
   {

@@ -1,18 +1,18 @@
 import CheckoutForm from "@/components/CheckoutForm";
-import db from "@/db/db";
-import { env } from "@/env";
+import { env } from "@/env/server";
+import { serverClient } from "@/trpc/serverClient";
 import { notFound } from "next/navigation";
 import Stripe from "stripe";
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(env.STRIPE_SECRET_KEY!);
 export default async function page({
   params: { id },
 }: {
   params: { id: string };
 }) {
-  const product = await db.product.findUnique({ where: { id } });
+  const product = await serverClient.products.getMyProduct(id);
 
-  if (product === null) return notFound();
+  if (!product) return notFound();
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: product.priceInCents,

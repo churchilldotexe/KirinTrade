@@ -9,8 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { env } from "@/env";
+import { env } from "@/env/client";
 import { formatCurrency } from "@/lib/formatter";
+import { trpc } from "@/trpc/client";
 import {
   Elements,
   LinkAuthenticationElement,
@@ -20,7 +21,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import Image from "next/image";
-import { useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
@@ -79,17 +80,17 @@ function Form({
   const elements = useElements();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>();
-  const email = useRef<string>();
+  //const email = useRef<string>();
+
+  let email = "";
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (stripe === null || elements === null || email.current === undefined)
-      return;
+    if (stripe === null || elements === null || !email) return;
     setIsLoading(true);
 
-    const orderExists = await userOrderExists(email.current, productId);
-
+    const orderExists = await userOrderExists(email, productId);
     if (orderExists) {
       setErrorMessage(
         "You have already purchased this product. Try downloading it from the My Orders page",
@@ -133,12 +134,13 @@ function Form({
           <PaymentElement />
           <div className="mt-4">
             <LinkAuthenticationElement
-              onChange={(e) => (email.current = e.value.email)}
+              onChange={(e) => (email = e.value.email)}
             />
           </div>
         </CardContent>
         <CardFooter>
           <Button
+            type="submit"
             className="w-full"
             size={"lg"}
             disabled={stripe === null || elements === null || isLoading}

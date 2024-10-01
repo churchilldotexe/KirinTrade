@@ -9,7 +9,9 @@ export default function ProductsPage({
 }: {
   searchParams: { orderBy: keyof typeof SORT_METHOD };
 }) {
-  const sortingMethod = SORT_METHOD[orderBy];
+  const orderByWithFallback =
+    orderBy === "newest" || orderBy === "popular" ? orderBy : "name";
+  const sortingMethod = SORT_METHOD[orderByWithFallback];
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
