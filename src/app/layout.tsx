@@ -1,3 +1,4 @@
+import Provider from "@/components/TrpcProvider";
 import { cn } from "@/lib/utils";
 import "@/styles/globals.css";
 
@@ -28,7 +29,7 @@ export default function RootLayout({
           DM.variable,
         )}
       >
-        {children}
+        <Provider>{children}</Provider>
         <Toaster position="top-center" richColors />
       </body>
     </html>
