@@ -82,7 +82,7 @@ function Form({
   let email = "";
   const { refetch: checkOrderExists } = trpc.orders.getMyOrder.useQuery(
     { email, productId },
-    { enabled: false },
+    { enabled: false, refetchOnMount: false, refetchOnReconnect: false },
   );
 
   const handleSubmit = async (e: FormEvent) => {

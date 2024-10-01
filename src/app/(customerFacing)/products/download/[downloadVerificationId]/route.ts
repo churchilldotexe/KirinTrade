@@ -1,8 +1,7 @@
 import db from "@/db/db";
+import { serverClient } from "@/trpc/serverClient";
 import fs from "fs/promises";
 import { NextResponse, type NextRequest } from "next/server";
-
-//FIX: change to trpc mutation
 
 export async function GET(
   req: NextRequest,
@@ -10,25 +9,24 @@ export async function GET(
     params: { downloadVerificationId },
   }: { params: { downloadVerificationId: string } },
 ) {
-  const verificationData = await db.downloadVerification.findUnique({
-    where: { id: downloadVerificationId, expiresAt: { gt: new Date() } },
-    select: { product: { select: { filePath: true, name: true } } },
+  const verificationData = await serverClient.downloads.getMyVerification({
+    id: downloadVerificationId,
   });
 
   // if download info is expired
-  if (verificationData === null) {
+  if (!verificationData) {
     return NextResponse.redirect(
       new URL("/products/download/expired", req.url),
     );
   }
 
-  const { size } = await fs.stat(verificationData.product.filePath);
-  const file = await fs.readFile(verificationData.product.filePath);
-  const extension = verificationData.product.filePath.split(".").pop();
+  const { size } = await fs.stat(verificationData.filePath);
+  const file = await fs.readFile(verificationData.filePath);
+  const extension = verificationData.filePath.split(".").pop();
 
   return new NextResponse(file, {
     headers: {
-      "Content-Disposition": `attachment; filename="${verificationData.product.name}.${extension}"`,
+      "Content-Disposition": `attachment; filename="${verificationData.name}.${extension}"`,
       "Content-length": size.toString(),
     },
   });

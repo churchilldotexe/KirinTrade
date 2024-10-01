@@ -78,6 +78,8 @@ export default async function SuccessPage({
   );
 }
 
-async function createDownloadVerification(productId: string) {
+async function createDownloadVerification(
+  productId: string,
+): Promise<string | undefined> {
   return await serverClient.downloads.createDownloadVerfication({ productId });
 }
