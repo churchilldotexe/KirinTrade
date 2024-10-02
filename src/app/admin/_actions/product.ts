@@ -1,6 +1,8 @@
 "use server";
 
-import db from "@/db/db";
+// TODO: change the file system to uploadthing use the class
+
+import { serverClient } from "@/trpc/serverClient";
 import fs from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -47,15 +49,13 @@ export async function addProduct(prevState: unknown, formData: FormData) {
     Buffer.from(await data.image.arrayBuffer()),
   );
 
-  await db.product.create({
-    data: {
-      isAvailableforPurchase: false,
-      name: data.name,
-      priceInCents: data.priceInCents,
-      description: data.description,
-      filePath,
-      imagePath,
-    },
+  await serverClient.admin.products.createProduct({
+    isAvailableforPurchase: false,
+    name: data.name,
+    priceInCents: data.priceInCents,
+    description: data.description,
+    filePath,
+    imagePath,
   });
   revalidatePath("/");
   revalidatePath("/products");
@@ -79,9 +79,10 @@ export async function updateProduct(
   }
 
   const data = result.data;
-  const product = await db.product.findUnique({ where: { id } });
+  //const product = await db.product.findUnique({ where: { id } });
+  const product = await serverClient.products.getMyProduct(id);
 
-  if (product === null) return notFound();
+  if (!product) return notFound();
 
   let filePath = product.filePath;
   if (data.file !== undefined && data.file.size > 0) {
@@ -102,15 +103,13 @@ export async function updateProduct(
     );
   }
 
-  await db.product.update({
-    where: { id },
-    data: {
-      name: data.name,
-      priceInCents: data.priceInCents,
-      description: data.description,
-      filePath,
-      imagePath,
-    },
+  await serverClient.admin.products.updateProduct({
+    id,
+    name: data.name,
+    priceInCents: data.priceInCents,
+    description: data.description,
+    filePath,
+    imagePath,
   });
 
   revalidatePath("/");
@@ -123,16 +122,19 @@ export async function toggleProductAvailability(
   id: string,
   isAvailableforPurchase: boolean,
 ) {
-  await db.product.update({ where: { id }, data: { isAvailableforPurchase } });
+  await serverClient.admin.products.updateProductAvailability({
+    id,
+    isAvailableforPurchase,
+  });
   revalidatePath("/");
   revalidatePath("/products");
   revalidatePath("/admin/products");
 }
 
 export async function deleteProduct(id: string) {
-  const product = await db.product.delete({ where: { id } });
+  const product = await serverClient.admin.products.deleteProduct({ id });
 
-  if (product === null) return notFound();
+  if (!product) return notFound();
   revalidatePath("/admin/products");
 
   await fs.unlink(product.filePath);

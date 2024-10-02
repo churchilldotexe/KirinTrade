@@ -20,8 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import db from "@/db/db";
 import { formatCurrency } from "@/lib/formatter";
+import { serverClient } from "@/trpc/serverClient";
 import { CheckCircle2, MoreVertical, Plus, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -64,16 +64,7 @@ const RenderWhenNoProducts = ({ href }: { href: string }) => {
 };
 
 const ProductsTable = async () => {
-  const productsData = await db.product.findMany({
-    select: {
-      name: true,
-      id: true,
-      isAvailableforPurchase: true,
-      priceInCents: true,
-      _count: { select: { orders: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const productsData = await serverClient.admin.products.getAllProductsData();
 
   if (productsData.length === 0)
     return <RenderWhenNoProducts href="/admin/products/new" />;
@@ -111,7 +102,7 @@ const ProductsTable = async () => {
             </TableCell>
             <TableCell>{product.name}</TableCell>
             <TableCell>{formatCurrency(product.priceInCents / 100)}</TableCell>
-            <TableCell>{product._count.orders}</TableCell>
+            <TableCell>{product.ordersCount}</TableCell>
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -134,7 +125,7 @@ const ProductsTable = async () => {
                   <DropdownMenuSeparator />
                   <DeleteDropdownItem
                     id={product.id}
-                    disabled={product._count.orders > 0}
+                    disabled={product.ordersCount > 0}
                   />
                 </DropdownMenuContent>
               </DropdownMenu>

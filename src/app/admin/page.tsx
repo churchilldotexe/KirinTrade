@@ -10,9 +10,9 @@ import { serverClient } from "@/trpc/serverClient";
 
 export default async function AdminDashBoard() {
   const [salesData, UserData, productData] = await Promise.all([
-    serverClient.admin.getSaleData(),
-    serverClient.admin.getUserData(),
-    serverClient.admin.getProductData(),
+    serverClient.admin.dashboard.getSaleData(),
+    serverClient.admin.dashboard.getUserData(),
+    serverClient.admin.dashboard.getProductData(),
   ]);
 
   return (
