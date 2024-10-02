@@ -1,18 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { env } from "@/env/server";
 import { formatCurrency } from "@/lib/formatter";
+import { products } from "@/server/database/schema";
 import { serverClient } from "@/trpc/serverClient";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Stripe from "stripe";
+import { server } from "typescript";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: { payment_intent: string };
+  searchParams: { payment_intent: string; email: string };
 }) {
   const paymentIntent = await stripe.paymentIntents.retrieve(
     searchParams.payment_intent,
@@ -27,6 +29,35 @@ export default async function SuccessPage({
   if (!product) return notFound();
 
   const isSuccess = paymentIntent.status === "succeeded";
+
+  if (searchParams.email && isSuccess) {
+    const userOrders = await serverClient.users.getUserOrder({
+      email: searchParams.email,
+    });
+
+    // to make sure order is not being created every refresh if it already exist
+    if (
+      !userOrders.some(
+        (order) => order.productId === paymentIntent.metadata.productId,
+      )
+    ) {
+      let userId = "";
+      //means not yet recorded
+      if (!userOrders[0]?.userId) {
+        const createdUser = await serverClient.users.createUser({
+          email: searchParams.email,
+        });
+        userId = createdUser.userId;
+      }
+
+      userId = userOrders[0]?.userId as string; // already made a check
+      await serverClient.orders.createOrder({
+        pricePadeInCents: product.priceInCents,
+        userId,
+        productId: paymentIntent.metadata.productId,
+      });
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-8">
