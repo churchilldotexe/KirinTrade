@@ -40,12 +40,32 @@ export async function emailOrderHistory(
     };
   });
 
-  //FIX: allsettled might be better here
+  // to ensure the values that is null(possible nulls from leftJoin) and promise failed will be excluded but not the fulfilled promise
+  const awaitedOrders = await Promise.allSettled(orders);
+  const settledOrders = awaitedOrders
+    .filter(
+      (
+        result,
+      ): result is PromiseFulfilledResult<{
+        downloadVerificationId: string;
+        userId: string;
+        email: string;
+        pricePaidInCents: number | null;
+        orderId: string | null;
+        createdAt: Date | null;
+        productId: string | null;
+        productName: string | null;
+        imagePath: string | null;
+        description: string | null;
+      }> => result.status === "fulfilled",
+    )
+    .map((result) => result.value);
+
   const data = await resend.emails.send({
     from: `Support <${env.SENDER_EMAIL}>`,
     to: user[0]?.email as string,
     subject: "Order History",
-    react: <OrderHistoryEmail orders={await Promise.all(orders)} />,
+    react: <OrderHistoryEmail orders={settledOrders} />,
   });
 
   if (data.error) {
