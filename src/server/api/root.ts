@@ -7,6 +7,7 @@ import { usersRouter } from "./router/users";
 import { dashboardRouter } from "./router/admin/admin-dashboard";
 import { adminProductsRouter } from "./router/admin/admin-products";
 import { adminUsersRouter } from "./router/admin/admin-user";
+import { adminOrdersRouter } from "./router/admin/admin-orders";
 
 export const appRouter = createTRPCRouter({
   products: productsRouter,
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
     dashboard: dashboardRouter,
     products: adminProductsRouter,
     users: adminUsersRouter,
+    orders: adminOrdersRouter,
   },
 });
 

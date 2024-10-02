@@ -1,17 +1,13 @@
 "use server";
 
-import db from "@/db/db";
+import { serverClient } from "@/trpc/serverClient";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 
 export async function deleteOrder(id: string) {
-  const user = await db.order.delete({
-    where: {
-      id,
-    },
-  });
+  const order = await serverClient.admin.orders.deleteOrder({ id });
 
-  if (user === null) return notFound();
+  if (order === null) return notFound();
   revalidatePath("/admin");
   revalidatePath("/admin/products");
   revalidatePath("/admin/orders");

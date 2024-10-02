@@ -12,20 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import db from "@/db/db";
+//import db from "@/db/db";
 import { formatCurrency } from "@/lib/formatter";
+import { serverClient } from "@/trpc/serverClient";
 import { MoreVertical } from "lucide-react";
 
 async function ProductsData() {
-  return await db.order.findMany({
-    select: {
-      id: true,
-      pricePaidInCents: true,
-      product: { select: { name: true } },
-      user: { select: { email: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  return await serverClient.admin.orders.getOrderOverview();
 }
 
 export default function OrdersPage() {
@@ -56,8 +49,8 @@ async function CustomerTable() {
         {orders.map((order) => {
           return (
             <TableRow key={order.id}>
-              <TableCell>{order.product.name}</TableCell>
-              <TableCell>{order.user.email}</TableCell>
+              <TableCell>{order.productName}</TableCell>
+              <TableCell>{order.email}</TableCell>
               <TableCell>
                 {formatCurrency(order.pricePaidInCents / 100)}
               </TableCell>
