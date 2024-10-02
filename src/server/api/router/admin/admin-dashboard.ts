@@ -18,7 +18,7 @@ export const dashboardRouter = createTRPCRouter({
   getUserData: publicProcedure.query(async ({ ctx }) => {
     const data = await ctx.db
       .select({
-        userCount: sql<number>`sum(distinct ${users.id})`,
+        userCount: sql<number>`count(distinct ${users.id})`,
         orderData: sql<number>`sum(${orders.pricePaidInCents})`,
       })
       .from(users)

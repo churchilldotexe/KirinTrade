@@ -12,18 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import db from "@/db/db";
+//import db from "@/db/db";
 import { formatCurrency, formatNumber } from "@/lib/formatter";
+import { serverClient } from "@/trpc/serverClient";
 import { MoreVertical } from "lucide-react";
 
 async function UsersData() {
-  return await db.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      orders: { select: { pricePaidInCents: true } },
-    },
-    orderBy: { createdAt: "desc" },
+  const userData = await serverClient.admin.users.getPaidUser();
+  return userData.map((data) => {
+    const ordersObj = JSON.parse(data.orders) as {
+      pricePaidInCents: number;
+    }[];
+
+    return { ...data, orders: ordersObj };
   });
 }
 

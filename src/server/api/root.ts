@@ -6,13 +6,18 @@ import { downloadsRouter } from "./router/downloads";
 import { usersRouter } from "./router/users";
 import { dashboardRouter } from "./router/admin/admin-dashboard";
 import { adminProductsRouter } from "./router/admin/admin-products";
+import { adminUsersRouter } from "./router/admin/admin-user";
 
 export const appRouter = createTRPCRouter({
   products: productsRouter,
   orders: ordersRouter,
   downloads: downloadsRouter,
   users: usersRouter,
-  admin: { dashboard: dashboardRouter, products: adminProductsRouter },
+  admin: {
+    dashboard: dashboardRouter,
+    products: adminProductsRouter,
+    users: adminUsersRouter,
+  },
 });
 
 export type AppRouter = typeof appRouter;
