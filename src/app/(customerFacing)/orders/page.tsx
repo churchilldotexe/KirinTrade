@@ -15,13 +15,10 @@ import { Label } from "@/components/ui/label";
 import { useFormState, useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
-// TODO fix database Check docs for sqlite.. try to connect to turso/ supabase if cant
-
 export default function OrdersPage() {
-  //const [data, action] = useFormState(emailOrderHistory, {});
-  const data = { error: "error", message: "foo" };
+  const [data, action] = useFormState(emailOrderHistory, {});
   return (
-    <form className="max-2-xl mx-auto">
+    <form action={action} className="max-2-xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle>My Orders</CardTitle>

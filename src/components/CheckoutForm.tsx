@@ -90,7 +90,6 @@ function Form({
 
     if (stripe === null || elements === null || !email) return;
     setIsLoading(true);
-
     const { data: orderExists } = await checkOrderExists();
     if (orderExists) {
       setErrorMessage(
@@ -98,11 +97,12 @@ function Form({
       );
       return;
     }
+
     try {
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${env.NEXT_PUBLIC_SERVER_URL}/stripe/purchase-success`,
+          return_url: `${env.NEXT_PUBLIC_SERVER_URL}/stripe/purchase-success?email=${email}`,
         },
       });
       if (

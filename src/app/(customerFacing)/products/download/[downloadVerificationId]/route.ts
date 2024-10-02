@@ -1,6 +1,7 @@
-import db from "@/db/db";
+import { env } from "@/env/server";
+import { uploadResponseSchema } from "@/lib/schema";
+import { fetcher } from "@/lib/utils";
 import { serverClient } from "@/trpc/serverClient";
-import fs from "fs/promises";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(
@@ -20,11 +21,35 @@ export async function GET(
     );
   }
 
-  const { size } = await fs.stat(verificationData.filePath);
-  const file = await fs.readFile(verificationData.filePath);
-  const extension = verificationData.filePath.split(".").pop();
+  // FIX: connect the actual fileKey
+  const url = `https://api.uploadthing.com/v6/pollUpload/${"f5hLW8iUdIw6qGlCDFxL8NeVA0SP9OQTwdloK3zaCkRIj4Ls"}`;
+  const reqst = new Request(url, {
+    headers: {
+      "X-Uploadthing-Api-Key": env.UPLOADTHING_TOKEN,
+    },
+  });
 
-  return new NextResponse(file, {
+  const data = await fetcher(
+    url,
+    { headers: reqst.headers },
+    uploadResponseSchema,
+  );
+  if (data.success === false) {
+    console.error(data.error, "error");
+    return new NextResponse(
+      JSON.stringify({ message: "Unable to get the download file" }),
+      { status: 401 },
+    );
+  }
+
+  const size = data.data.fileData.fileSize;
+  const extension = data.data.fileData.fileName.split(".").pop();
+
+  const fileResp = await fetch(data.data.fileData.fileUrl);
+
+  console.log(data, "file url");
+
+  return new NextResponse(fileResp.body, {
     headers: {
       "Content-Disposition": `attachment; filename="${verificationData.name}.${extension}"`,
       "Content-length": size.toString(),
