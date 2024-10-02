@@ -5,70 +5,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import db from "@/db/db";
 import { formatCurrency, formatNumber } from "@/lib/formatter";
-
-const getSaleData = async () => {
-  const data = await db.order.aggregate({
-    _sum: { pricePaidInCents: true },
-    _count: true,
-  });
-
-  return {
-    amount: (data._sum?.pricePaidInCents ?? 0) / 100,
-    numberOfSales: data._count,
-  };
-};
-
-const getUserData = async () => {
-  const [userCount, orderData] = await Promise.all([
-    db.user.count(),
-    db.order.aggregate({
-      _sum: { pricePaidInCents: true },
-    }),
-  ]);
-
-  return {
-    userCount,
-    averageValuePerUser:
-      userCount ?? (orderData._sum.pricePaidInCents ?? 0) / userCount / 100,
-  };
-};
-
-const getProductData = async () => {
-  const [activeCount, inactiveCount] = await Promise.all([
-    db.product.count({ where: { isAvailableforPurchase: true } }),
-    db.product.count({ where: { isAvailableforPurchase: false } }),
-  ]);
-  return {
-    activeCount,
-    inactiveCount,
-  };
-};
+import { serverClient } from "@/trpc/serverClient";
 
 export default async function AdminDashBoard() {
   const [salesData, UserData, productData] = await Promise.all([
-    getSaleData(),
-    getUserData(),
-    getProductData(),
+    serverClient.admin.getSaleData(),
+    serverClient.admin.getUserData(),
+    serverClient.admin.getProductData(),
   ]);
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       <DashBoardCard
         title="Sales"
-        subtitle={`${formatNumber(salesData.numberOfSales)} Orders`}
-        body={formatCurrency(salesData.amount)}
+        subtitle={`${formatNumber(salesData?.numberOfSales ?? 0)} Orders`}
+        body={formatCurrency(salesData?.amount ?? 0)}
       />
       <DashBoardCard
         title="Customer"
-        subtitle={`${formatCurrency(UserData.averageValuePerUser)} Average Value`}
-        body={formatNumber(UserData.userCount)}
+        subtitle={`${formatCurrency(UserData?.averageValuePerUser ?? 0)} Average Value`}
+        body={formatNumber(UserData?.userCount ?? 0)}
       />
       <DashBoardCard
         title="Active Products"
-        subtitle={`${formatNumber(productData.inactiveCount)} inactive products`}
-        body={`${formatNumber(productData.activeCount)} active products`}
+        subtitle={`${formatNumber(productData?.inactiveCount ?? 0)} inactive products`}
+        body={`${formatNumber(productData?.activeCount ?? 0)} active products`}
       />
     </div>
   );

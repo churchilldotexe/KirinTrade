@@ -47,8 +47,6 @@ export async function GET(
 
   const fileResp = await fetch(data.data.fileData.fileUrl);
 
-  console.log(data, "file url");
-
   return new NextResponse(fileResp.body, {
     headers: {
       "Content-Disposition": `attachment; filename="${verificationData.name}.${extension}"`,
