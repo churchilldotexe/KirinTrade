@@ -1,7 +1,6 @@
 import "server-only";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
-import { env } from "@/env";
 import * as schema from "./schema";
 
 export const connection = createClient({
