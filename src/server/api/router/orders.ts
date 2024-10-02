@@ -25,18 +25,25 @@ export const ordersRouter = createTRPCRouter({
   createOrder: publicProcedure
     .input(
       z.object({
-        pricePadeInCents: z.number(),
+        pricePaidInCents: z.number(),
         userId: z.string(),
         productId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const uuid = randomUUID();
-      return await ctx.db.insert(orders).values({
-        id: uuid,
-        productId: input.productId,
-        userId: input.userId,
-        pricePaidInCents: input.pricePadeInCents,
-      });
+      return await ctx.db
+        .insert(orders)
+        .values({
+          id: uuid,
+          productId: input.productId,
+          userId: input.userId,
+          pricePaidInCents: input.pricePaidInCents,
+        })
+        .onConflictDoUpdate({
+          target: orders.id,
+          set: { pricePaidInCents: input.pricePaidInCents },
+        })
+        .returning();
     }),
 });

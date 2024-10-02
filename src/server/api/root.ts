@@ -8,6 +8,7 @@ import { dashboardRouter } from "./router/admin/admin-dashboard";
 import { adminProductsRouter } from "./router/admin/admin-products";
 import { adminUsersRouter } from "./router/admin/admin-user";
 import { adminOrdersRouter } from "./router/admin/admin-orders";
+import { stripeRouter } from "./router/stripe";
 
 export const appRouter = createTRPCRouter({
   products: productsRouter,
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
     users: adminUsersRouter,
     orders: adminOrdersRouter,
   },
+  stripe: stripeRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -52,7 +52,7 @@ export default async function SuccessPage({
 
       userId = userOrders[0]?.userId as string; // already made a check
       await serverClient.orders.createOrder({
-        pricePadeInCents: product.priceInCents,
+        pricePaidInCents: product.priceInCents,
         userId,
         productId: paymentIntent.metadata.productId,
       });

@@ -1,9 +1,9 @@
-import db from "@/db/db";
-import { env } from "@/env";
 import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import PurchaseReceiptEmail from "@/email/PurchaseReceipt";
+import { env } from "@/env/server";
+import { serverClient } from "@/trpc/serverClient";
 
 const strip = new Stripe(env.STRIPE_WEBHOOK_SECRET);
 const resend = new Resend(env.RESEND_API_KEY);
@@ -20,32 +20,24 @@ export async function POST(req: NextRequest) {
     const email = charge.billing_details.email;
     const pricePaidInCents = charge.amount;
 
-    const product = await db.product.findUnique({ where: { id: productId } });
-
-    if (product === null || email === null || productId === undefined) {
+    if (!productId) {
       return new NextResponse("Bad Request", { status: 400 });
     }
 
-    const userFields = {
-      email,
-      orders: { create: { productId, pricePaidInCents } },
-    };
+    const product = await serverClient.products.getMyProduct(productId);
 
-    const {
-      orders: [order],
-    } = await db.user.upsert({
-      where: { email },
-      create: userFields,
-      update: userFields,
-      select: { orders: { orderBy: { createdAt: "desc" }, take: 1 } },
-    });
+    if (!product || email === null || productId === undefined) {
+      return new NextResponse("Bad Request", { status: 400 });
+    }
 
-    const downloadVerification = await db.downloadVerification.create({
-      data: {
-        productId,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-      },
+    const { userId } = await serverClient.users.createUser({ email });
+    const [order] = await serverClient.orders.createOrder({
+      pricePaidInCents,
+      userId,
+      productId,
     });
+    const downloadVerification =
+      await serverClient.downloads.createDownloadVerfication({ productId });
 
     await resend.emails.send({
       from: `Support <${env.SENDER_EMAIL}>`,
@@ -55,7 +47,7 @@ export async function POST(req: NextRequest) {
         <PurchaseReceiptEmail
           product={product}
           order={order!}
-          downloadVerificationId={downloadVerification.id}
+          downloadVerificationId={downloadVerification}
         />
       ),
     });
