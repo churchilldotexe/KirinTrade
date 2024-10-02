@@ -2,7 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { downloadVerifications, products } from "@/server/database/schema";
 import { randomUUID } from "crypto";
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const downloadsRouter = createTRPCRouter({
   createDownloadVerfication: publicProcedure
@@ -18,6 +19,13 @@ export const downloadsRouter = createTRPCRouter({
           expiresAt: oneDayInMs,
         })
         .returning({ verificationId: downloadVerifications.id });
+
+      if (!createDownloadVerfication) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to create your download verification",
+        });
+      }
       return createDownloadVerfication?.verificationId;
     }),
   getMyVerification: publicProcedure

@@ -1,8 +1,9 @@
 import "server-only";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { z } from "zod";
-import { orders, users } from "@/server/database/schema";
+import { orders, products, users } from "@/server/database/schema";
 import { and, eq } from "drizzle-orm";
+import { randomUUID } from "crypto";
 
 export const ordersRouter = createTRPCRouter({
   getMyOrder: publicProcedure
@@ -20,5 +21,22 @@ export const ordersRouter = createTRPCRouter({
             eq(orders.productId, input.productId),
           ),
         );
+    }),
+  createOrder: publicProcedure
+    .input(
+      z.object({
+        pricePadeInCents: z.number(),
+        userId: z.string(),
+        productId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uuid = randomUUID();
+      return await ctx.db.insert(orders).values({
+        id: uuid,
+        productId: input.productId,
+        userId: input.userId,
+        pricePaidInCents: input.pricePadeInCents,
+      });
     }),
 });
