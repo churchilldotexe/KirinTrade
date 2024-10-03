@@ -32,7 +32,12 @@ export const downloadsRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const [verificationData] = await ctx.db
-        .select({ filePath: products.filePath, name: products.name })
+        .select({
+          filePath: products.filePath,
+          name: products.name,
+          fileExtension: products.fileExtension,
+          fileSize: products.fileSize,
+        })
         .from(downloadVerifications)
         .innerJoin(products, eq(downloadVerifications.productId, products.id))
         .where(

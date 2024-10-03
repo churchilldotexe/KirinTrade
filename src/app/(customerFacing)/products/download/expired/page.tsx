@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function page() {
+export default function Page() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col  items-center justify-center pt-5">
       <h1 className="mb-4 text-4xl md:text-center lg:text-5xl">
