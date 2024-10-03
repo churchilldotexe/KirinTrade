@@ -48,10 +48,11 @@ export default function ProductCard({
         "visible animate-in fade-in-5": isVisible,
       })}
     >
-      <div className="relative aspect-video h-auto w-full">
+      <div className="relative aspect-video w-full">
         <Image
           src={imagePath}
           alt={name}
+          className="object-cover object-center"
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw,"
         />
