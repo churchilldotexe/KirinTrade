@@ -4,8 +4,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { orders } from "@/server/database/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { UTApi } from "uploadthing/server";
-import { TRPCError } from "@trpc/server";
+import { UTApi, UploadThingError } from "uploadthing/server";
 const fileSchema = z
   .instanceof(File, { message: "Must be a file" })
   .refine((file) => file.size > 0, { message: "file is required" });
@@ -61,22 +60,22 @@ export const adminProductsRouter = createTRPCRouter({
       } = input;
       const [fileRes, imageRes] = await utapi.uploadFiles([file, image]);
       if (!fileRes || !imageRes) {
-        throw new TRPCError({
+        throw new UploadThingError({
           code: "BAD_REQUEST",
-          message: "Unable to upload your file",
+          message: "Unable to upload your data",
         });
       }
       if (fileRes.error) {
-        throw new TRPCError({
+        throw new UploadThingError({
+          code: fileRes.error.code,
           message: fileRes.error.message,
-          code: "BAD_REQUEST",
         });
       }
 
       if (imageRes.error) {
-        throw new TRPCError({
+        throw new UploadThingError({
+          code: imageRes.error.code,
           message: imageRes.error.message,
-          code: "BAD_REQUEST",
         });
       }
 
@@ -131,8 +130,8 @@ export const adminProductsRouter = createTRPCRouter({
       if (file !== undefined && file.size > 0) {
         const uploadedFileRes = await utapi.uploadFiles(file);
         if (!uploadedFileRes.data) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new UploadThingError({
+            code: uploadedFileRes.error.code,
             message: uploadedFileRes.error.message,
           });
         }
@@ -145,8 +144,8 @@ export const adminProductsRouter = createTRPCRouter({
       if (image !== undefined && image.size > 0) {
         const uploadedImageRes = await utapi.uploadFiles(image);
         if (!uploadedImageRes.data) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
+          throw new UploadThingError({
+            code: uploadedImageRes.error.code,
             message: uploadedImageRes.error.message,
           });
         }
@@ -172,10 +171,23 @@ export const adminProductsRouter = createTRPCRouter({
 
       // delete old image and file for book keeping
       if (file !== undefined && file.size > 0 && fileKeyRef) {
-        await utapi.deleteFiles(fileKeyRef);
+        const isDeleted = await utapi.deleteFiles(fileKeyRef);
+        if (isDeleted.success === false) {
+          throw new UploadThingError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to delete your files",
+          });
+        }
       }
       if (image !== undefined && image.size > 0 && imageKeyRef) {
-        await utapi.deleteFiles(imageKeyRef);
+        const isDeleted = await utapi.deleteFiles(imageKeyRef);
+
+        if (isDeleted.success === false) {
+          throw new UploadThingError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to delete your files",
+          });
+        }
       }
     }),
 
@@ -203,10 +215,16 @@ export const adminProductsRouter = createTRPCRouter({
         .get();
 
       if (deletedProduct?.imageKey && deletedProduct.fileKey) {
-        await utapi.deleteFiles([
+        const isDeleted = await utapi.deleteFiles([
           deletedProduct.fileKey,
           deletedProduct.imageKey,
         ]);
+        if (isDeleted.success === false) {
+          throw new UploadThingError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to delete your files",
+          });
+        }
       }
 
       return deletedProduct;
