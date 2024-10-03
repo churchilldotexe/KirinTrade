@@ -1,9 +1,6 @@
 "use server";
 
-// TODO: change the file system to uploadthing use the class
-
 import { serverClient } from "@/trpc/serverClient";
-import fs from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -29,34 +26,15 @@ export async function addProduct(prevState: unknown, formData: FormData) {
 
   const data = result.data;
 
-  const createDir = async (dir: string) => {
-    try {
-      await fs.mkdir(dir, { recursive: true });
-    } catch (error) {
-      console.error("Error when creating directory", error);
-      throw error;
-    }
-  };
-
-  await createDir("products");
-  const filePath = `products/${crypto.randomUUID()}-${data.file.name}`;
-  await fs.writeFile(`${filePath}`, Buffer.from(await data.file.arrayBuffer()));
-
-  await createDir("public/products");
-  const imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`;
-  await fs.writeFile(
-    `public/${imagePath}`,
-    Buffer.from(await data.image.arrayBuffer()),
-  );
-
   await serverClient.admin.products.createProduct({
     isAvailableforPurchase: false,
     name: data.name,
     priceInCents: data.priceInCents,
     description: data.description,
-    filePath,
-    imagePath,
+    file: data.file,
+    image: data.image,
   });
+
   revalidatePath("/");
   revalidatePath("/products");
   revalidatePath("/admin/products");
@@ -69,7 +47,7 @@ const editScheme = addSchema.extend({
 });
 
 export async function updateProduct(
-  id: string,
+  productId: string,
   prevState: unknown,
   formData: FormData,
 ) {
@@ -77,39 +55,20 @@ export async function updateProduct(
   if (result.success === false) {
     return result.error.formErrors.fieldErrors;
   }
-
   const data = result.data;
-  //const product = await db.product.findUnique({ where: { id } });
-  const product = await serverClient.products.getMyProduct(id);
 
+  const product = await serverClient.products.getMyProduct(productId);
   if (!product) return notFound();
 
-  let filePath = product.filePath;
-  if (data.file !== undefined && data.file.size > 0) {
-    await fs.unlink(filePath);
-    filePath = `products/${crypto.randomUUID()}-${data.file.name}`;
-    await fs.writeFile(
-      `${filePath}`,
-      Buffer.from(await data.file.arrayBuffer()),
-    );
-  }
-  let imagePath = product.imagePath;
-  if (data.image !== undefined && data.image.size > 0) {
-    await fs.unlink(`public/${imagePath}`);
-    imagePath = `/products/${crypto.randomUUID()}-${data.image.name}`;
-    await fs.writeFile(
-      `public/${imagePath}`,
-      Buffer.from(await data.image.arrayBuffer()),
-    );
-  }
-
   await serverClient.admin.products.updateProduct({
-    id,
+    id: productId,
     name: data.name,
     priceInCents: data.priceInCents,
     description: data.description,
-    filePath,
-    imagePath,
+    file: data.file,
+    image: data.image,
+    fileKeyRef: product.fileKey,
+    imageKeyRef: product?.imageKey,
   });
 
   revalidatePath("/");
@@ -135,11 +94,8 @@ export async function deleteProduct(id: string) {
   const product = await serverClient.admin.products.deleteProduct({ id });
 
   if (!product) return notFound();
+
   revalidatePath("/admin/products");
-
-  await fs.unlink(product.filePath);
-  await fs.unlink(`public/${product.imagePath}`);
-
   revalidatePath("/");
   revalidatePath("/products");
 }

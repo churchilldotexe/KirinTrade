@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `file_size` integer;

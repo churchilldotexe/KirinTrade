@@ -4,6 +4,17 @@ import { asc, eq, sql } from "drizzle-orm";
 import { orders } from "@/server/database/schema";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import { UTApi } from "uploadthing/server";
+import { TRPCError } from "@trpc/server";
+const fileSchema = z
+  .instanceof(File, { message: "Must be a file" })
+  .refine((file) => file.size > 0, { message: "file is required" });
+const imageSchema = fileSchema.refine(
+  (image) => image.type.startsWith("image/"),
+  { message: "image is required" },
+);
+
+const utapi = new UTApi();
 
 export const adminProductsRouter = createTRPCRouter({
   getAllProductsData: publicProcedure.query(async ({ ctx }) => {
@@ -16,10 +27,17 @@ export const adminProductsRouter = createTRPCRouter({
         ordersCount: sql<number>`count(distinct ${orders.id})`,
       })
       .from(products)
-      .innerJoin(orders, eq(orders.productId, products.id))
+      .leftJoin(orders, eq(orders.productId, products.id))
+      .groupBy(
+        products.name,
+        products.id,
+        products.isAvailableforPurchase,
+        products.priceInCents,
+      )
       .orderBy(asc(products.name));
     return productsData;
   }),
+
   createProduct: publicProcedure
     .input(
       z.object({
@@ -27,31 +45,58 @@ export const adminProductsRouter = createTRPCRouter({
         name: z.string().min(1),
         priceInCents: z.number(),
         description: z.string(),
-        filePath: z.string(),
-        imagePath: z.string(),
+        file: fileSchema,
+        image: imageSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const uuid = randomUUID();
       const {
         isAvailableforPurchase,
-        imagePath,
-        filePath,
+        file,
+        image,
         description,
         priceInCents,
         name,
       } = input;
+      const [fileRes, imageRes] = await utapi.uploadFiles([file, image]);
+      if (!fileRes || !imageRes) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Unable to upload your file",
+        });
+      }
+      if (fileRes.error) {
+        throw new TRPCError({
+          message: fileRes.error.message,
+          code: "BAD_REQUEST",
+        });
+      }
+
+      if (imageRes.error) {
+        throw new TRPCError({
+          message: imageRes.error.message,
+          code: "BAD_REQUEST",
+        });
+      }
+
+      const fileExtension = fileRes?.data.name.split(".").pop();
 
       await ctx.db.insert(products).values({
         isAvailableforPurchase,
         name,
         priceInCents,
-        filePath,
-        imagePath,
+        fileKey: fileRes.data.key,
+        fileExtension,
+        fileSize: fileRes.data.size,
+        filePath: fileRes.data.url,
+        imagePath: imageRes.data.url,
+        imageKey: imageRes.data.key,
         description,
         id: uuid,
       });
     }),
+
   updateProduct: publicProcedure
     .input(
       z.object({
@@ -59,26 +104,81 @@ export const adminProductsRouter = createTRPCRouter({
         name: z.string().min(1),
         priceInCents: z.number(),
         description: z.string().min(1),
-        filePath: z.string().min(1),
-        imagePath: z.string().min(1),
+        file: fileSchema.optional(),
+        image: imageSchema.optional(),
+        fileKeyRef: z.string().nullable(),
+        imageKeyRef: z.string().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { imagePath, filePath, id, description, priceInCents, name } =
-        input;
+      const {
+        image,
+        file,
+        imageKeyRef,
+        fileKeyRef,
+        id,
+        description,
+        priceInCents,
+        name,
+      } = input;
+      let newFileUrl: string = "";
+      let newFileKey: string = "";
+      let newFileSize: number = 0;
+      let newImageUrl: string = "";
+      let newImageKey: string = "";
+      let newFileExtension: string = "";
+
+      if (file !== undefined && file.size > 0) {
+        const uploadedFileRes = await utapi.uploadFiles(file);
+        if (!uploadedFileRes.data) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: uploadedFileRes.error.message,
+          });
+        }
+        newFileUrl = uploadedFileRes.data.url;
+        newFileKey = uploadedFileRes.data.key;
+        newFileSize = uploadedFileRes.data.size;
+        newFileExtension = uploadedFileRes.data.name.split(".").pop() as string; // the fileName always ends with .ext
+      }
+
+      if (image !== undefined && image.size > 0) {
+        const uploadedImageRes = await utapi.uploadFiles(image);
+        if (!uploadedImageRes.data) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: uploadedImageRes.error.message,
+          });
+        }
+        newImageUrl = uploadedImageRes.data.url;
+        newImageKey = uploadedImageRes.data.key;
+      }
 
       await ctx.db
         .update(products)
         .set({
           name,
-          imagePath,
-          filePath,
+          imagePath: newImageUrl,
+          imageKey: newImageKey,
+          fileExtension: newFileExtension,
+          fileKey: newFileKey,
+          fileSize: newFileSize,
+          filePath: newFileUrl,
           description,
           priceInCents,
           updatedAt: sql`(strftime('%s', 'now'))`,
         })
         .where(eq(products.id, id));
+
+      // delete old image and file for book keeping
+      if (file !== undefined && file.size > 0 && fileKeyRef) {
+        await utapi.deleteFiles(fileKeyRef);
+      }
+      if (image !== undefined && image.size > 0 && imageKeyRef) {
+        await utapi.deleteFiles(imageKeyRef);
+      }
     }),
+
   updateProductAvailability: publicProcedure
     .input(
       z.object({ isAvailableforPurchase: z.boolean(), id: z.string().min(1) }),
@@ -92,13 +192,23 @@ export const adminProductsRouter = createTRPCRouter({
         })
         .where(eq(products.id, input.id));
     }),
+
   deleteProduct: publicProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db
+      const deletedProduct = await ctx.db
         .delete(products)
         .where(eq(products.id, input.id))
         .returning()
         .get();
+
+      if (deletedProduct?.imageKey && deletedProduct.fileKey) {
+        await utapi.deleteFiles([
+          deletedProduct.fileKey,
+          deletedProduct.imageKey,
+        ]);
+      }
+
+      return deletedProduct;
     }),
 });
